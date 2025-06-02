@@ -16,7 +16,10 @@ df = None
 if mode == "Datei hochladen":
     uploaded_file = st.file_uploader("📤 Winddaten (.csv)", type=["csv"])
     if uploaded_file:
-        df = pd.read_csv(uploaded_file)
+        try:
+            df = pd.read_csv(uploaded_file)
+        except Exception as e:
+            st.error(f"Fehler beim Einlesen der Datei: {e}")
 elif mode == "Manuell eingeben":
     st.markdown("📝 Gib hier die Winddaten manuell ein:")
     default_data = pd.DataFrame({
@@ -24,7 +27,18 @@ elif mode == "Manuell eingeben":
         'Direction_deg': [0, 45, 90, 135],
         'Speed_kmh': [10, 15, 20, 25]
     })
-    df = st.data_editor(default_data, num_rows="dynamic", use_container_width=True)
+    raw_df = st.data_editor(default_data, num_rows="dynamic", use_container_width=True)
+    
+    # Nur Zeilen mit vollständigen, numerischen Werten übernehmen
+    try:
+        df = raw_df.dropna()
+        df = df.astype({'Altitude_ft': float, 'Direction_deg': float, 'Speed_kmh': float})
+        if df.empty:
+            st.warning("⚠️ Keine gültigen Winddaten eingegeben.")
+            df = None
+    except Exception as e:
+        st.error(f"❌ Fehlerhafte Eingaben erkannt: {e}")
+        df = None
 
 col1, col2 = st.columns(2)
 with col1:
