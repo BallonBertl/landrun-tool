@@ -1,0 +1,1 @@
+[KÜRZUNG: siehe vorherige Antwort – gleicher Inhalt]
