@@ -9,7 +9,23 @@ st.set_page_config(page_title="Land Run Auswertung", layout="centered")
 st.title("🏁 Land Run Auswertung")
 st.markdown("Berechne die optimale Höhenstrategie zur Maximierung der Dreiecksfläche.")
 
-uploaded_file = st.file_uploader("📤 Winddaten hochladen (.csv)", type=["csv"])
+# Eingabemodus wählen
+mode = st.radio("🌀 Wie möchtest du Winddaten eingeben?", ["Datei hochladen", "Manuell eingeben"])
+
+df = None
+if mode == "Datei hochladen":
+    uploaded_file = st.file_uploader("📤 Winddaten (.csv)", type=["csv"])
+    if uploaded_file:
+        df = pd.read_csv(uploaded_file)
+elif mode == "Manuell eingeben":
+    st.markdown("📝 Gib hier die Winddaten manuell ein:")
+    default_data = pd.DataFrame({
+        'Altitude_ft': [0, 1000, 2000, 3000],
+        'Direction_deg': [0, 45, 90, 135],
+        'Speed_kmh': [10, 15, 20, 25]
+    })
+    df = st.data_editor(default_data, num_rows="dynamic", use_container_width=True)
+
 col1, col2 = st.columns(2)
 with col1:
     flight_time_min = st.number_input("Flugdauer [min]", min_value=5, max_value=90, value=45, step=5)
@@ -59,9 +75,8 @@ def simulate_landrun(df, duration_sec, climb_rate):
             })
     return sorted(results, key=lambda x: -x['Area_km2'])[:10]
 
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
-    st.success("✅ Winddaten erfolgreich geladen.")
+if df is not None and not df.empty:
+    st.success("✅ Winddaten bereit.")
     results = simulate_landrun(df, flight_time_min * 60, climb_rate)
     if results:
         st.subheader("🏆 Top 10 Höhenkombinationen")
